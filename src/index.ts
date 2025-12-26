@@ -1,0 +1,138 @@
+#!/usr/bin/env node
+import { appendFile } from "node:fs/promises";
+import process from "node:process";
+import { readLogFromFile } from "./core.ts";
+import { review } from "./review.ts";
+
+const INCLUDE_PREMIUM = false;
+
+const SOLUTIONS_FILE = "./solutions.log";
+
+await main();
+
+async function main(): Promise<void> {
+  const availableCommands = [
+    "help",
+    "next",
+    "add",
+    "debug:show-json-log",
+  ] as const;
+
+  type CommandType = (typeof availableCommands)[number];
+
+  const args = process.argv.slice(2);
+
+  const command = args.shift() as CommandType;
+
+  switch (command) {
+    case "help": {
+      printHelp();
+
+      break;
+    }
+
+    case "next": {
+      const n = args.shift();
+
+      await review(SOLUTIONS_FILE, n ? parseInt(n) : 1, INCLUDE_PREMIUM);
+
+      break;
+    }
+
+    case "add": {
+      const problemNumber = args.shift();
+
+      const confidence = args.shift();
+
+      const skip = args.shift() === "skip";
+
+      if (!problemNumber || !confidence) {
+        console.error("problem number and confidence are required");
+        process.exit(1);
+      }
+
+      const problemNumberInt = parseInt(problemNumber);
+      if (isNaN(problemNumberInt)) {
+        console.error(
+          `problem number must be an integer; got: ${problemNumber}`,
+        );
+        process.exit(1);
+      }
+
+      const confidenceFloat = parseFloat(confidence);
+      if (isNaN(confidenceFloat)) {
+        console.error(`confidence must be a number; got: ${confidence}`);
+        process.exit(1);
+      }
+
+      if (confidenceFloat < 0 || confidenceFloat > 1) {
+        console.error(
+          `confidence must be between 0 and 1; got: ${confidenceFloat}`,
+        );
+        process.exit(1);
+      }
+
+      // write to file in the following format:
+      // date=2025-06-05 problem=0175 confidence=1.0 skip=true
+
+      const date = new Date().toISOString().split("T")[0];
+      let logEntry = `date=${date} problem=${problemNumberInt
+        .toString()
+        .padStart(4, "0")} confidence=${confidenceFloat.toFixed(1)}`;
+      if (skip) {
+        logEntry += " skip=true";
+      }
+
+      await appendFile(SOLUTIONS_FILE, logEntry + "\n");
+
+      break;
+    }
+
+    case "debug:show-json-log": {
+      const logFile = args.shift();
+
+      if (!logFile) {
+        throw new Error("no log file provided");
+      }
+
+      const records = await readLogFromFile(logFile);
+      console.log(JSON.stringify(records, null, 2));
+
+      break;
+    }
+
+    default:
+      console.log(`Error: invalid command: ${command}`);
+      console.log();
+
+      printHelp();
+
+      process.exit(1);
+  }
+}
+
+function printHelp(): void {
+  console.log(`Usage: lc-review <command> [options]
+
+Commands:
+
+    lc-review help
+
+        Prints this help message.
+
+    lc-review next [n_items]
+
+        Gets the next N items for review.
+        - n_items: (optional) The number of items to review (default: 1)
+
+    lc-review add <problem_number> <grade> [skip]
+
+        Adds a problem with a grade to the log.
+        - problem_number: The problem number (integer)
+        - grade: The grade for the problem (integer)
+
+Debug commands:
+
+    debug:show-json-log <log_file>
+`);
+}

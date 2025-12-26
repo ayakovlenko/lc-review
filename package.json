@@ -1,0 +1,27 @@
+{
+  "name": "lc-review",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.mjs",
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [],
+  "author": "Anton Iacovlenco",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "25.0.3",
+    "tsdown": "0.18.3",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
+  },
+  "dependencies": {
+    "dayjs": "1.11.19",
+    "supermemo": "2.0.23",
+    "zod": "4.2.1"
+  },
+  "bin": "./dist/index.mjs"
+}
