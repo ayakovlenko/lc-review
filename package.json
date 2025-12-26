@@ -1,7 +1,15 @@
 {
   "name": "lc-review",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.3",
+  "description": "LeetCode flashcards for spaced repetition learning",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayakovlenko/lc-review.git"
+  },
+  "homepage": "https://github.com/ayakovlenko/lc-review",
+  "issues": {
+    "url": "https://github.com/ayakovlenko/lc-review/issues"
+  },
   "main": "dist/index.mjs",
   "files": [
     "dist/index.mjs",
@@ -13,7 +21,11 @@
     "test": "vitest run",
     "test:watch": "vitest --watch"
   },
-  "keywords": [],
+  "keywords": [
+    "leetcode",
+    "spaced-repetition",
+    "cli"
+  ],
   "author": "Anton Iacovlenco",
   "license": "MIT",
   "type": "module",
