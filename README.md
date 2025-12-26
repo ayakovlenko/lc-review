@@ -10,7 +10,7 @@ problems to review based on their due dates and frustration scores.
 ## Installation
 
 ```bash
-npm i -G lc-review
+npm install --global lc-review@latest
 ```
 
 ## Usage
