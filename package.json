@@ -1,8 +1,13 @@
 {
   "name": "lc-review",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "dist/index.mjs",
+  "files": [
+    "dist/index.mjs",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsdown",
     "test": "vitest run",
@@ -23,5 +28,7 @@
     "supermemo": "2.0.23",
     "zod": "4.2.1"
   },
-  "bin": "./dist/index.mjs"
+  "bin": {
+    "lc-review": "dist/index.mjs"
+  }
 }
