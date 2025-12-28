@@ -1,6 +1,6 @@
 # lc-review
 
-[![LeetCode](https://img.shields.io/badge/LeetCode-000000?logo=LeetCode&logoColor=#d16c06)](#)
+[![NPM Version](https://img.shields.io/npm/v/lc-review)](https://www.npmjs.com/package/lc-review)
 
 `lc-review` is a command-line tool designed to help you manage and review your
 LeetCode problems using the SuperMemo 2 (SM2) algorithm for spaced repetition.
