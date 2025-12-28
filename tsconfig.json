@@ -10,6 +10,8 @@
     "target": "esnext",
     "lib": ["esnext"],
     "types": ["node", "vitest"],
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
 
     // Other Outputs
     "sourceMap": true,

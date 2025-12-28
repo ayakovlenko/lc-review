@@ -3,6 +3,7 @@ import { appendFile } from "node:fs/promises";
 import process from "node:process";
 import { readLogFromFile } from "./core.ts";
 import { review } from "./review.ts";
+import packageJson from "../package.json" with { type: "json" };
 
 const INCLUDE_PREMIUM = false;
 
@@ -13,6 +14,7 @@ await main();
 async function main(): Promise<void> {
   const availableCommands = [
     "help",
+    "version",
     "next",
     "add",
     "debug:show-json-log",
@@ -27,6 +29,12 @@ async function main(): Promise<void> {
   switch (command) {
     case "help": {
       printHelp();
+
+      break;
+    }
+
+    case "version": {
+      console.log(`lc-review v${packageJson.version}`);
 
       break;
     }
@@ -119,6 +127,10 @@ Commands:
     lc-review help
 
         Prints this help message.
+
+    lc-review version
+
+        Prints the version of lc-review.
 
     lc-review next [n_items]
 
