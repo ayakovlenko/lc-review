@@ -1,6 +1,5 @@
 // Kindly ported from Python by Claude Sonnet 3.7
-import { supermemo, SuperMemoGrade, SuperMemoItem } from "supermemo";
-import dayjs from "dayjs";
+import { supermemo, type SuperMemoGrade, type SuperMemoItem } from "supermemo";
 import { readLogFromFile } from "./core.ts";
 import { PREMIUM_PROBLEMS } from "./data.ts";
 
@@ -57,7 +56,11 @@ const practiceReviewItem = (
 ): ReviewItem => {
   const newSm2Item = supermemo(reviewItem.sm2Item, grade);
   const nDays = newSm2Item.interval * INTERVAL_FACTOR;
-  const newDueDate = dayjs(attemptDate).add(nDays, "day").format("YYYY-MM-DD");
+  const newDueDate = new Date(
+    new Date(attemptDate).getTime() + nDays * 24 * 60 * 60 * 1000,
+  )
+    .toISOString()
+    .split("T")[0]!;
   const newNumAttempts = reviewItem.numAttempts + 1;
 
   return {
@@ -122,8 +125,8 @@ const processLogRecords = (logRecords: LogRecord[]): ReviewItem[] => {
 
   // Sort review items
   return [...reviewMap.values()].sort((a, b) => {
-    const dateA = dayjs(a.dueDate).valueOf();
-    const dateB = dayjs(b.dueDate).valueOf();
+    const dateA = new Date(a.dueDate).valueOf();
+    const dateB = new Date(b.dueDate).valueOf();
 
     // Sort by due date (ascending)
     if (dateA !== dateB) {
