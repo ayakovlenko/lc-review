@@ -166,7 +166,10 @@ Debug commands:
 }
 
 async function showProblemInfo(problemNumber: string): Promise<void> {
-  const problem = ALL_PROBLEMS.find((p) => p.id === parseInt(problemNumber));
+  // NOTE: problemNumber is the frontend ID, e.g., "1", "175", etc.
+  const problem = ALL_PROBLEMS.find(
+    (p) => p.questionFrontendId === problemNumber,
+  );
 
   if (!problem) {
     console.log(`Problem ${problemNumber} not found.`);
