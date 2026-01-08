@@ -4,6 +4,8 @@ import process from "node:process";
 import { readLogFromFile } from "./core.ts";
 import { review } from "./review.ts";
 import packageJson from "../package.json" with { type: "json" };
+import { log } from "node:console";
+import { ALL_PROBLEMS } from "./data.ts";
 
 const INCLUDE_PREMIUM = false;
 
@@ -18,6 +20,7 @@ async function main(): Promise<void> {
     "next",
     "add",
     "debug:show-json-log",
+    "debug:show-problem-info",
   ] as const;
 
   type CommandType = (typeof availableCommands)[number];
@@ -103,8 +106,19 @@ async function main(): Promise<void> {
         throw new Error("no log file provided");
       }
 
-      const records = await readLogFromFile(logFile);
-      console.log(JSON.stringify(records, null, 2));
+      await showJsonLog(logFile);
+
+      break;
+    }
+
+    case "debug:show-problem-info": {
+      const problemNumber = args.shift();
+
+      if (!problemNumber) {
+        throw new Error("no problem number provided");
+      }
+
+      showProblemInfo(problemNumber);
 
       break;
     }
@@ -146,5 +160,33 @@ Commands:
 Debug commands:
 
     debug:show-json-log <log_file>
+
+    debug:show-problem-info <problem_number>
 `);
+}
+
+async function showProblemInfo(problemNumber: string): Promise<void> {
+  const problem = ALL_PROBLEMS.find((p) => p.id === parseInt(problemNumber));
+
+  if (!problem) {
+    console.log(`Problem ${problemNumber} not found.`);
+    return;
+  }
+
+  log(`ID:         ${problem.id}`);
+  log(`Title:      ${problem.title}`);
+  log(`Difficulty: ${problem.difficulty}`);
+  log(`Paid only:  ${problem.paidOnly}`);
+  log(`AC Rate:    ${(problem.acRate * 100).toFixed(2)}%`);
+  if (problem.topicTags) {
+    log(`Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`);
+  }
+  log(`URL:        https://leetcode.com/problems/${problem.titleSlug}/`);
+  log(`AC rate:    ${(problem.acRate * 100).toFixed(2)}%`);
+}
+
+async function showJsonLog(logFile: string): Promise<void> {
+  const records = await readLogFromFile(logFile);
+
+  console.log(JSON.stringify(records, null, 2));
 }

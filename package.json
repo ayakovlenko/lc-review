@@ -1,6 +1,6 @@
 {
   "name": "lc-review",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "LeetCode flashcards for spaced repetition learning",
   "repository": {
     "type": "git",
