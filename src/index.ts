@@ -1,20 +1,30 @@
 #!/usr/bin/env node
 import { appendFile } from "node:fs/promises";
-import process from "node:process";
+import process, { cwd } from "node:process";
 import { readLogFromFile } from "./core.ts";
 import { review } from "./review.ts";
 import packageJson from "../package.json" with { type: "json" };
 import { ALL_PROBLEMS } from "./data.ts";
 import { parseArgs } from "node:util";
 import { encode as encodeToon } from "@toon-format/toon";
+import { join } from "node:path";
 
 const INCLUDE_PREMIUM = false;
 
-const SOLUTIONS_FILE = "./solutions.log";
-
 await main();
 
+function findSolutionLogFile(): string {
+  const fromEnv = process.env["LC_REVIEW_SOLUTIONS_FILE"];
+  if (fromEnv) {
+    return fromEnv;
+  }
+
+  return join(cwd(), "solutions.log");
+}
+
 async function main(): Promise<void> {
+  const SOLUTIONS_FILE = findSolutionLogFile();
+
   const { values: globalValues, positionals: args } = parseArgs({
     args: process.argv.slice(2),
     options: {
@@ -29,7 +39,7 @@ async function main(): Promise<void> {
     "version",
     "next",
     "add",
-    "debug:show-json-log",
+    "debug:show-solutions-log",
     "debug:show-problem-info",
   ] as const;
 
@@ -106,16 +116,10 @@ async function main(): Promise<void> {
       break;
     }
 
-    case "debug:show-json-log": {
-      const logFile = args.shift();
-
-      if (!logFile) {
-        throw new Error("no log file provided");
-      }
-
+    case "debug:show-solutions-log": {
       const isAgent = globalValues.agent === true;
 
-      await showJsonLog(logFile, isAgent);
+      await showJsonLog(SOLUTIONS_FILE, isAgent);
 
       break;
     }
@@ -145,7 +149,13 @@ async function main(): Promise<void> {
 }
 
 function printHelp(): void {
-  console.log(`Usage: lc-review <command> [options]
+  console.log(`Usage: lc-review [flags] <command> [options]
+
+Flags:
+
+  --agent
+
+       Outputs results in a machine-readable format (toon) for use with agents.
 
 Commands:
 
