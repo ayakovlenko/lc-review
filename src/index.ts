@@ -4,8 +4,9 @@ import process from "node:process";
 import { readLogFromFile } from "./core.ts";
 import { review } from "./review.ts";
 import packageJson from "../package.json" with { type: "json" };
-import { log } from "node:console";
 import { ALL_PROBLEMS } from "./data.ts";
+import { parseArgs } from "node:util";
+import { encode as encodeToon } from "@toon-format/toon";
 
 const INCLUDE_PREMIUM = false;
 
@@ -14,6 +15,15 @@ const SOLUTIONS_FILE = "./solutions.log";
 await main();
 
 async function main(): Promise<void> {
+  const { values: globalValues, positionals: args } = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+      agent: { type: "boolean" },
+    },
+    allowPositionals: true,
+    strict: false,
+  });
+
   const availableCommands = [
     "help",
     "version",
@@ -24,8 +34,6 @@ async function main(): Promise<void> {
   ] as const;
 
   type CommandType = (typeof availableCommands)[number];
-
-  const args = process.argv.slice(2);
 
   const command = args.shift() as CommandType;
 
@@ -56,7 +64,6 @@ async function main(): Promise<void> {
       const confidence = args.shift();
 
       const skip = args.shift() === "skip";
-
       if (!problemNumber || !confidence) {
         console.error("problem number and confidence are required");
         process.exit(1);
@@ -106,19 +113,23 @@ async function main(): Promise<void> {
         throw new Error("no log file provided");
       }
 
-      await showJsonLog(logFile);
+      const isAgent = globalValues.agent === true;
+
+      await showJsonLog(logFile, isAgent);
 
       break;
     }
 
     case "debug:show-problem-info": {
-      const problemNumber = args.shift();
+      const problemNumbers = args.shift();
 
-      if (!problemNumber) {
-        throw new Error("no problem number provided");
+      if (!problemNumbers) {
+        throw new Error("no problem numbers provided");
       }
 
-      showProblemInfo(problemNumber);
+      const isAgent = globalValues.agent === true;
+
+      showProblemInfo(problemNumbers.split(","), isAgent);
 
       break;
     }
@@ -161,35 +172,74 @@ Debug commands:
 
     debug:show-json-log <log_file>
 
-    debug:show-problem-info <problem_number>
+    debug:show-problem-info <problem_number>[,problem_number,...]
 `);
 }
 
-async function showProblemInfo(problemNumber: string): Promise<void> {
-  // NOTE: problemNumber is the frontend ID, e.g., "1", "175", etc.
-  const problem = ALL_PROBLEMS.find(
-    (p) => p.questionFrontendId === problemNumber,
-  );
+async function showProblemInfo(
+  problemNumbers: string[],
+  isAgent: boolean,
+): Promise<void> {
+  const problems: typeof ALL_PROBLEMS = [];
+  for (const problemNumber of problemNumbers) {
+    const problem = ALL_PROBLEMS.find(
+      (p) => p.questionFrontendId === problemNumber,
+    );
 
-  if (!problem) {
-    console.log(`Problem ${problemNumber} not found.`);
+    if (problem) {
+      problems.push(problem);
+    }
+  }
+
+  if (!problems) {
+    console.log(`No problems found for numbers: ${problemNumbers.join(", ")}`);
     return;
   }
 
-  log(`ID:         ${problem.id}`);
-  log(`Title:      ${problem.title}`);
-  log(`Difficulty: ${problem.difficulty}`);
-  log(`Paid only:  ${problem.paidOnly}`);
-  log(`AC Rate:    ${(problem.acRate * 100).toFixed(2)}%`);
-  if (problem.topicTags) {
-    log(`Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`);
+  if (isAgent) {
+    console.log(
+      encodeToon(
+        problems.map((problem) => {
+          return {
+            id: problem.questionFrontendId,
+            title: problem.title,
+            difficulty: problem.difficulty,
+            paidOnly: problem.paidOnly,
+            acRate: problem.acRate,
+            topics: problem.topicTags.map((tag) => tag.slug),
+            url: `https://leetcode.com/problems/${problem.titleSlug}/`,
+          };
+        }),
+      ),
+    );
+    return;
   }
-  log(`URL:        https://leetcode.com/problems/${problem.titleSlug}/`);
-  log(`AC rate:    ${(problem.acRate * 100).toFixed(2)}%`);
+
+  for (const problem of problems) {
+    console.log(`ID:         ${problem.questionFrontendId}`);
+    console.log(`Title:      ${problem.title}`);
+    console.log(`Difficulty: ${problem.difficulty}`);
+    console.log(`Paid only:  ${problem.paidOnly}`);
+    console.log(`AC Rate:    ${(problem.acRate * 100).toFixed(2)}%`);
+    if (problem.topicTags) {
+      console.log(
+        `Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`,
+      );
+    }
+    console.log(
+      `URL:        https://leetcode.com/problems/${problem.titleSlug}/`,
+    );
+    console.log("");
+  }
 }
 
-async function showJsonLog(logFile: string): Promise<void> {
+async function showJsonLog(logFile: string, isAgent: boolean): Promise<void> {
   const records = await readLogFromFile(logFile);
+
+  if (isAgent) {
+    console.log(encodeToon(records));
+    return;
+  }
 
   console.log(JSON.stringify(records, null, 2));
 }
