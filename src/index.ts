@@ -29,6 +29,7 @@ async function main(): Promise<void> {
     args: process.argv.slice(2),
     options: {
       agent: { type: "boolean" },
+      difficulty: { type: "string" },
     },
     allowPositionals: true,
     strict: false,
@@ -39,6 +40,7 @@ async function main(): Promise<void> {
     "version",
     "next",
     "add",
+    "list-unsolved",
     "debug:show-solutions-log",
     "debug:show-problem-info",
   ] as const;
@@ -81,9 +83,7 @@ async function main(): Promise<void> {
 
       const problemNumberInt = parseInt(problemNumber);
       if (isNaN(problemNumberInt)) {
-        console.error(
-          `problem number must be an integer; got: ${problemNumber}`,
-        );
+        console.error(`problem number must be an integer; got: ${problemNumber}`);
         process.exit(1);
       }
 
@@ -94,9 +94,7 @@ async function main(): Promise<void> {
       }
 
       if (confidenceFloat < 0 || confidenceFloat > 1) {
-        console.error(
-          `confidence must be between 0 and 1; got: ${confidenceFloat}`,
-        );
+        console.error(`confidence must be between 0 and 1; got: ${confidenceFloat}`);
         process.exit(1);
       }
 
@@ -112,6 +110,15 @@ async function main(): Promise<void> {
       }
 
       await appendFile(SOLUTIONS_FILE, logEntry + "\n");
+
+      break;
+    }
+
+    case "list-unsolved": {
+      await listUnsolvedProblems(SOLUTIONS_FILE, {
+        includePremium: INCLUDE_PREMIUM,
+        difficulty: globalValues.difficulty as string | undefined,
+      });
 
       break;
     }
@@ -177,6 +184,11 @@ Commands:
         Adds a problem with a grade to the log.
         - problem_number: The problem number (integer)
         - grade: The grade for the problem (integer)
+    
+    lc-review list-unsolved [--difficulty <difficulty>]
+
+        Lists all unsolved problems.
+        - --difficulty: (optional) Filter by difficulty (Easy, Medium, Hard)
 
 Debug commands:
 
@@ -186,15 +198,37 @@ Debug commands:
 `);
 }
 
-async function showProblemInfo(
-  problemNumbers: string[],
-  isAgent: boolean,
+async function listUnsolvedProblems(
+  logFile: string,
+  options: { includePremium: boolean; difficulty: string | undefined },
 ): Promise<void> {
+  const records = await readLogFromFile(logFile);
+
+  const solvedProblemIds = new Set(records.map((record) => record.problem));
+
+  let unsolvedProblems = ALL_PROBLEMS.filter(
+    (problem) => !solvedProblemIds.has(parseInt(problem.questionFrontendId)),
+  );
+
+  if (!options.includePremium) {
+    unsolvedProblems = unsolvedProblems.filter((problem) => !problem.paidOnly);
+  }
+
+  if (options.difficulty) {
+    unsolvedProblems = unsolvedProblems.filter(
+      (problem) => problem.difficulty.toLowerCase() === options.difficulty!.toLowerCase(),
+    );
+  }
+
+  for (const problem of unsolvedProblems) {
+    console.log(`https://leetcode.com/problems/${problem.titleSlug}/`);
+  }
+}
+
+async function showProblemInfo(problemNumbers: string[], isAgent: boolean): Promise<void> {
   const problems: typeof ALL_PROBLEMS = [];
   for (const problemNumber of problemNumbers) {
-    const problem = ALL_PROBLEMS.find(
-      (p) => p.questionFrontendId === problemNumber,
-    );
+    const problem = ALL_PROBLEMS.find((p) => p.questionFrontendId === problemNumber);
 
     if (problem) {
       problems.push(problem);
@@ -232,13 +266,9 @@ async function showProblemInfo(
     console.log(`Paid only:  ${problem.paidOnly}`);
     console.log(`AC Rate:    ${(problem.acRate * 100).toFixed(2)}%`);
     if (problem.topicTags) {
-      console.log(
-        `Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`,
-      );
+      console.log(`Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`);
     }
-    console.log(
-      `URL:        https://leetcode.com/problems/${problem.titleSlug}/`,
-    );
+    console.log(`URL:        https://leetcode.com/problems/${problem.titleSlug}/`);
     console.log("");
   }
 }
