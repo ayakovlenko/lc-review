@@ -148,13 +148,13 @@ export const review = async (
 ): Promise<void> => {
   const logRecords = await readLogFromFile(logFile);
 
-  const PREMIUM_PROBLEMS = new Set<number>(
-    ALL_PROBLEMS.filter((q) => q.paidOnly).map((q) => q.id),
+  const PREMIUM_PROBLEMS = new Set<string>(
+    ALL_PROBLEMS.filter((q) => q.paidOnly).map((q) => q.questionFrontendId),
   );
 
   // Filter by premium status
   const filteredRecords = logRecords.filter(
-    (record) => PREMIUM_PROBLEMS.has(record.problem) === premium,
+    (record) => PREMIUM_PROBLEMS.has(String(record.problem)) === premium,
   );
 
   const sortedReviewItems = processLogRecords(filteredRecords);
