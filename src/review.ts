@@ -1,7 +1,7 @@
 // Kindly ported from Python by Claude Sonnet 3.7
 import { supermemo, type SuperMemoGrade, type SuperMemoItem } from "supermemo";
 import { readLogFromFile } from "./core.ts";
-import { PREMIUM_PROBLEMS } from "./data.ts";
+import { ALL_PROBLEMS } from "./gen/problems.ts";
 
 const INTERVAL_FACTOR = 7;
 
@@ -147,6 +147,10 @@ export const review = async (
   premium = false,
 ): Promise<void> => {
   const logRecords = await readLogFromFile(logFile);
+
+  const PREMIUM_PROBLEMS = new Set<number>(
+    ALL_PROBLEMS.filter((q) => q.paidOnly).map((q) => q.id),
+  );
 
   // Filter by premium status
   const filteredRecords = logRecords.filter(

@@ -4,10 +4,10 @@ import process, { cwd } from "node:process";
 import { readLogFromFile } from "./core.ts";
 import { review } from "./review.ts";
 import packageJson from "../package.json" with { type: "json" };
-import { ALL_PROBLEMS } from "./data.ts";
 import { parseArgs } from "node:util";
 import { encode as encodeToon } from "@toon-format/toon";
 import { join } from "node:path";
+import { ALL_PROBLEMS } from "./gen/problems.ts";
 
 const INCLUDE_PREMIUM = false;
 
@@ -83,7 +83,9 @@ async function main(): Promise<void> {
 
       const problemNumberInt = parseInt(problemNumber);
       if (isNaN(problemNumberInt)) {
-        console.error(`problem number must be an integer; got: ${problemNumber}`);
+        console.error(
+          `problem number must be an integer; got: ${problemNumber}`,
+        );
         process.exit(1);
       }
 
@@ -94,7 +96,9 @@ async function main(): Promise<void> {
       }
 
       if (confidenceFloat < 0 || confidenceFloat > 1) {
-        console.error(`confidence must be between 0 and 1; got: ${confidenceFloat}`);
+        console.error(
+          `confidence must be between 0 and 1; got: ${confidenceFloat}`,
+        );
         process.exit(1);
       }
 
@@ -216,7 +220,8 @@ async function listUnsolvedProblems(
 
   if (options.difficulty) {
     unsolvedProblems = unsolvedProblems.filter(
-      (problem) => problem.difficulty.toLowerCase() === options.difficulty!.toLowerCase(),
+      (problem) =>
+        problem.difficulty.toLowerCase() === options.difficulty!.toLowerCase(),
     );
   }
 
@@ -225,10 +230,15 @@ async function listUnsolvedProblems(
   }
 }
 
-async function showProblemInfo(problemNumbers: string[], isAgent: boolean): Promise<void> {
+async function showProblemInfo(
+  problemNumbers: string[],
+  isAgent: boolean,
+): Promise<void> {
   const problems: typeof ALL_PROBLEMS = [];
   for (const problemNumber of problemNumbers) {
-    const problem = ALL_PROBLEMS.find((p) => p.questionFrontendId === problemNumber);
+    const problem = ALL_PROBLEMS.find(
+      (p) => p.questionFrontendId === problemNumber,
+    );
 
     if (problem) {
       problems.push(problem);
@@ -266,9 +276,13 @@ async function showProblemInfo(problemNumbers: string[], isAgent: boolean): Prom
     console.log(`Paid only:  ${problem.paidOnly}`);
     console.log(`AC Rate:    ${(problem.acRate * 100).toFixed(2)}%`);
     if (problem.topicTags) {
-      console.log(`Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`);
+      console.log(
+        `Topics:     ${problem.topicTags.map((tag) => tag.name).join(", ")}`,
+      );
     }
-    console.log(`URL:        https://leetcode.com/problems/${problem.titleSlug}/`);
+    console.log(
+      `URL:        https://leetcode.com/problems/${problem.titleSlug}/`,
+    );
     console.log("");
   }
 }
