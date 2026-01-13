@@ -1,6 +1,6 @@
 {
   "name": "lc-review",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "LeetCode flashcards for spaced repetition learning",
   "repository": {
     "type": "git",
@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "build": "tsc --noEmit && tsdown",
+    "gen": "node ./scripts/gen.ts",
     "fmt": "npx prettier --write .",
     "lc-review": "node ./dist/index.mjs",
     "test": "vitest run",
