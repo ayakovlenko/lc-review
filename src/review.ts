@@ -1,6 +1,6 @@
 // Kindly ported from Python by Claude Sonnet 3.7
 import { supermemo, type SuperMemoGrade, type SuperMemoItem } from "supermemo";
-import { readLogFromFile } from "./core.ts";
+import { readLogFromFile, resolveProblemByNumber } from "./core.ts";
 import { ALL_PROBLEMS } from "./gen/problems.ts";
 
 const INTERVAL_FACTOR = 7;
@@ -98,9 +98,7 @@ const processLogRecords = (logRecords: LogRecord[]): ReviewItem[] => {
   );
 
   // Sort by date
-  const sortedRecords = [...filteredRecords].sort(
-    (a, b) => a.date.getTime() - b.date.getTime(),
-  );
+  const sortedRecords = [...filteredRecords].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   // Process records
   const reviewMap = new Map<number, ReviewItem>();
@@ -161,7 +159,14 @@ export const review = async (
 
   // Display results
   for (const item of sortedReviewItems.slice(0, n)) {
-    const lcidccUrl = `https://lcid.cc/${item.problemNumber}`;
-    console.log(`${item.dueDate} -- ${lcidccUrl}`);
+    const problem = resolveProblemByNumber(ALL_PROBLEMS, String(item.problemNumber));
+
+    if (!problem) {
+      throw new Error(`problem not found: ${item.problemNumber}`);
+    }
+
+    const url = `https://leetcode.com/problems/${problem.titleSlug}/`;
+    const problemNumber = problem.questionFrontendId;
+    console.log(`${item.dueDate}: ${problemNumber}. ${url}`);
   }
 };
