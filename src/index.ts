@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { appendFile } from "node:fs/promises";
 import process, { cwd } from "node:process";
-import { readLogFromFile } from "./core.ts";
+import { readLogFromFile, resolveProblemByNumber } from "./core.ts";
 import { review } from "./review.ts";
 import packageJson from "../package.json" with { type: "json" };
 import { parseArgs } from "node:util";
@@ -236,9 +236,7 @@ async function showProblemInfo(
 ): Promise<void> {
   const problems: typeof ALL_PROBLEMS = [];
   for (const problemNumber of problemNumbers) {
-    const problem = ALL_PROBLEMS.find(
-      (p) => p.questionFrontendId === problemNumber,
-    );
+    const problem = resolveProblemByNumber(ALL_PROBLEMS, problemNumber);
 
     if (problem) {
       problems.push(problem);

@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
+import type { Problem } from "./gen/problems.ts";
 
 const logRecordSchema = z.object({
   date: z.preprocess((val) => new Date(String(val)), z.date()),
@@ -57,4 +58,11 @@ function parseLine(line: string): LocRecord {
   }
 
   return result.data;
+}
+
+export function resolveProblemByNumber(
+  problems: Problem[],
+  problemNumber: string,
+): Problem | undefined {
+  return problems.find((p) => p.questionFrontendId === problemNumber);
 }
